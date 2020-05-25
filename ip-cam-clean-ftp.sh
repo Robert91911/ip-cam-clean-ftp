@@ -1,6 +1,8 @@
 #!/bin/bash
 
-MAIN_DIR="/home/robert/HDD-1_IP_2TB/foscam"
+MAIN_DIR="/home/robert/HDD-1_IP_2TB/HDD-1_IP_2TB/foscam/"
+FECHA=$(date)
+
 
 #Nombes de los directorios
 record_dir="record"
@@ -21,74 +23,90 @@ EspacioSnap=3
 
 
 arrayDirectoriosRecord=()
-readarray -d '' arrayDirectoriosRecord < <(find $PWD -name "$record_dir" -print0 | sort -z)
+readarray -d '' arrayDirectoriosRecord < <(find $MAIN_DIR -name "$record_dir" -print0 | sort -z)
 
 arrayDirectoriosAlarm=()
-readarray -d '' arrayDirectoriosAlarm < <(find $PWD -name "$alarm_dir" -print0 | sort -z)
+readarray -d '' arrayDirectoriosAlarm < <(find $MAIN_DIR -name "$alarm_dir" -print0 | sort -z)
 
 arrayDirectoriosSnap=()
-readarray -d '' arrayDirectoriosSnap < <(find $PWD -name "$snap_dir" -print0 | sort -z)
+readarray -d '' arrayDirectoriosSnap < <(find $MAIN_DIR -name "$snap_dir" -print0 | sort -z)
+
+echo "#############################################################################################"
+echo "#			Se realizaran las tareas de limpieza de las camaras IP						  	  #"
+echo "#############################################################################################"
+
+echo " "
+echo " Dia y hora de la limpieza $FECHA"
+echo " "
 
 ######### Mover las alarmas a su carpeta correspondiente #########
-
-Bucle para el copiado de archivos
+echo "######################## REALIZANDO ORGANIZACION DE ALERTAS ########################"
+#Bucle para el copiado de archivos
 for i in 0 1 2 3; do
-        echo "Se estan moviendo los archivos de la camara" $i
+        echo "Se estan moviendo los archivos de la camara IP1$i"
         #Mover los archivos
-        mv -n "${arrayDirectoriosRecord[i]}/HMalarm"* "${arrayDirectoriosAlarm[i]}/"
+        mv  "${arrayDirectoriosRecord[i]}/HMalarm"* "${arrayDirectoriosAlarm[i]}/" 2>/dev/null
 done
 
-echo "######################## ORGANIZACION DE ALERTAS REALIZADA ########################"
 #Bucle para la eliminación de archivos cuando se haya pasado de espacio
 
 #record
+echo " "
+echo "######################## ESCANEO Y ELIMINACION DE RECORD ########################"
 for i in 0 1 2 3; do
-	echo "Se esta verificando el espacio de la carpeta record de la camara " $i
-	espacioOcupado=$(du ${arrayDirectoriosRecord[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
 	espacioAsignado="IP1"$i"_space"
-	echo $espacioOcupado
+	echo "---------------------------------------------------------------------------------"
+	echo "Se esta verificando el espacio de la carpeta RECORD de la camara IP1$i"
+	echo "Espacio especificado: " ${!espacioAsignado} "GB"
+	espacioOcupado=$(du ${arrayDirectoriosRecord[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
+	echo "Espacio ocupado: " $espacioOcupado " GB"
 		while [ $espacioOcupado -gt ${!espacioAsignado} ]; do
-			echo "El espacio para esta camara es " ${!espacioAsignado}
 			archivoMasAntiguo=$(find ${arrayDirectoriosRecord[i]} -type f | sort | head -n 1)
-			echo "Se ha eliminado el archivo mas antiguo, espacio actual = " $espacioOcupado
+			echo "Eliminando archivo: "$archivoMasAntiguo
 			rm $archivoMasAntiguo -v
 			espacioOcupado=$(du ${arrayDirectoriosRecord[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
+			echo "El espacio ocupado actual es: " $espacioOcupado " GB"
 		done
 done
 
-echo "######################## ELIMINACION DE RECORD REALIZADA ########################"
+echo "---------------------------------------------------------------------------------"
 
 #alarm
+echo " "
+echo "######################## ESCANEO Y ELIMINACION DE ALARM ########################"
 for i in 0 1 2 3; do
-	echo "Se esta verificando el espacio de la carpeta alarm de la camara " $i
-	espacioOcupado=$(du ${arrayDirectoriosAlarm[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
 	espacioAsignado="EspacioAlarmas"
-	echo $espacioOcupado
+	echo "---------------------------------------------------------------------------------"
+	echo "Se esta verificando el espacio de la carpeta alarm de la camara IP1$i"
+	espacioOcupado=$(du ${arrayDirectoriosAlarm[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
+	echo "Espacio ocupado: " $espacioOcupado " GB"
 		while [ $espacioOcupado -gt ${!espacioAsignado} ]; do
-			echo "El espacio para esta camara es " ${!espacioAsignado}
 			archivoMasAntiguo=$(find ${arrayDirectoriosAlarm[i]} -type f | sort | head -n 1)
-			echo "Se ha eliminado el archivo mas antiguo, espacio actual = " $espacioOcupado
+			echo "Eliminando archivo: "$archivoMasAntiguo
 			rm $archivoMasAntiguo -v
 			espacioOcupado=$(du ${arrayDirectoriosAlarm[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
+			echo "El espacio ocupado actual es: " $espacioOcupado " GB"
 		done
 done
 
-echo "######################## ELIMINACION DE ALARM REALIZADA ########################"
+echo "---------------------------------------------------------------------------------"
 
 #snap
+echo " "
+echo "######################## ESCANEO Y ELIMINACION DE SNAP ########################"
 for i in 0 1 2 3; do
-	echo "Se esta verificando el espacio de la carpeta snap de la camara " $i
-	espacioOcupado=$(du ${arrayDirectoriosSnap[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
 	espacioAsignado="EspacioSnap"
-	echo $espacioOcupado
+	echo "---------------------------------------------------------------------------------"
+	echo "Se esta verificando el espacio de la carpeta snap de la camara IP1$i"
+	espacioOcupado=$(du ${arrayDirectoriosSnap[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
+	echo "Espacio ocupado: " $espacioOcupado " GB"
 		while [ $espacioOcupado -gt ${!espacioAsignado} ]; do
-			echo "El espacio para esta camara es " ${!espacioAsignado}
 			archivoMasAntiguo=$(find ${arrayDirectoriosSnap[i]} -type f | sort | head -n 1)
-			echo "Se ha eliminado el archivo mas antiguo, espacio actual = " $espacioOcupado
+			echo "Eliminando archivo: "$archivoMasAntiguo
 			rm $archivoMasAntiguo -v
 			espacioOcupado=$(du ${arrayDirectoriosSnap[i]} --si --block-size=1G | grep -Eo '[0-9]{1,4}' | head -n 1)
+			echo "El espacio ocupado actual es: " $espacioOcupado " GB"
 		done
 done
 
-echo "######################## ELIMINACION DE SNAP REALIZADA ########################"
-
+echo "---------------------------------------------------------------------------------"
